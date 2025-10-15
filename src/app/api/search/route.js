@@ -46,6 +46,14 @@ export async function GET(request) {
         take: 10,
       });
     } else {
+      // Get current user's friend IDs
+      const currentUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { friendIds: true },
+      });
+
+      const friendIds = currentUser?.friendIds || [];
+
       // Search for colors by name
       colors = await prisma.color.findMany({
         where: {
@@ -57,17 +65,36 @@ export async function GET(request) {
         take: 10,
       });
 
-      // Search for palettes by name (only user's own palettes)
+      // Search for palettes by name with access control
       palettes = await prisma.palette.findMany({
         where: {
-          userId: session.user.id,
           name: {
             contains: searchTerm,
             mode: 'insensitive',
           },
+          OR: [
+            // User's own palettes (all access levels)
+            { userId: session.user.id },
+            // Public palettes from anyone
+            { access: 'PUBLIC' },
+            // Friends-only palettes from friends
+            {
+              AND: [
+                { access: 'FRIENDS' },
+                { userId: { in: friendIds } },
+              ],
+            },
+          ],
         },
         include: {
           colors: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+            },
+          },
         },
         take: 10,
       });

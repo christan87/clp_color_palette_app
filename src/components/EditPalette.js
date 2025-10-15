@@ -16,6 +16,7 @@ export default function EditPalette({ palette }) {
   const [selectedColorIndex, setSelectedColorIndex] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [paletteName, setPaletteName] = useState(palette.name);
+  const [paletteAccess, setPaletteAccess] = useState(palette.access || 'PRIVATE');
   const [saving, setSaving] = useState(false);
   const [editingExisting, setEditingExisting] = useState(false);
 
@@ -290,6 +291,7 @@ export default function EditPalette({ palette }) {
         body: JSON.stringify({
           name: paletteName,
           schemeType,
+          access: paletteAccess,
           colorIds,
         }),
       });
@@ -322,18 +324,36 @@ export default function EditPalette({ palette }) {
           </p>
         </div>
 
-        {/* Palette Name */}
+        {/* Palette Name & Access */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
-          <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
-            Palette Name
-          </label>
-          <input
-            type="text"
-            value={paletteName}
-            onChange={(e) => setPaletteName(e.target.value)}
-            placeholder="e.g., Ocean Breeze, Sunset Vibes"
-            className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                Palette Name
+              </label>
+              <input
+                type="text"
+                value={paletteName}
+                onChange={(e) => setPaletteName(e.target.value)}
+                placeholder="e.g., Ocean Breeze, Sunset Vibes"
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-3 text-gray-700 dark:text-gray-300">
+                Privacy
+              </label>
+              <select
+                value={paletteAccess}
+                onChange={(e) => setPaletteAccess(e.target.value)}
+                className="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 cursor-pointer"
+              >
+                <option value="PRIVATE">🔒 Private - Only you can see</option>
+                <option value="FRIENDS">👥 Friends - Your friends can see</option>
+                <option value="PUBLIC">🌐 Public - Everyone can see</option>
+              </select>
+            </div>
+          </div>
         </div>
 
         {/* Controls */}

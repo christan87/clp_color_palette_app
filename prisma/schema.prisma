@@ -75,14 +75,21 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+enum PaletteAccess {
+  PUBLIC
+  PRIVATE
+  FRIENDS
+}
+
 model Palette {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  id          String        @id @default(auto()) @map("_id") @db.ObjectId
   name        String
-  colorIds    String[] @db.ObjectId // Array of Color IDs
-  schemeType  String   // analogous, complementary, triadic, etc.
-  userId      String   @db.ObjectId
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  colorIds    String[]      @db.ObjectId // Array of Color IDs
+  schemeType  String        // analogous, complementary, triadic, etc.
+  access      PaletteAccess @default(PRIVATE) // public, private, or friends
+  userId      String        @db.ObjectId
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
   
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   colors Color[] @relation(fields: [colorIds], references: [id])

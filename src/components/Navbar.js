@@ -154,14 +154,27 @@ export default function Navbar() {
                           onClick={handleResultClick}
                           className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
-                          <div className="flex items-center gap-2 mb-1">
-                            <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
-                            </svg>
-                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                              {palette.name}
-                            </p>
+                          <div className="flex items-center justify-between gap-2 mb-1">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <svg className="w-4 h-4 text-purple-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                              </svg>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {palette.name}
+                              </p>
+                            </div>
+                            {palette.access === 'PUBLIC' && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">🌐</span>
+                            )}
+                            {palette.access === 'FRIENDS' && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400 flex-shrink-0">👥</span>
+                            )}
                           </div>
+                          {palette.user && palette.user.id !== session?.user?.id && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 truncate">
+                              by {palette.user.name || palette.user.email}
+                            </p>
+                          )}
                           <div className="flex gap-1">
                             {palette.colors.slice(0, 5).map((color, idx) => (
                               <div

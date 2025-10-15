@@ -11,12 +11,20 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const { name, schemeType, colorIds } = await request.json();
+    const { name, schemeType, colorIds, access } = await request.json();
 
     // Validate required fields
     if (!name || !schemeType || !colorIds || colorIds.length === 0) {
       return NextResponse.json(
         { error: 'Name, scheme type, and colors are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate access field if provided
+    if (access && !['PUBLIC', 'PRIVATE', 'FRIENDS'].includes(access)) {
+      return NextResponse.json(
+        { error: 'Access must be PUBLIC, PRIVATE, or FRIENDS' },
         { status: 400 }
       );
     }
@@ -40,13 +48,20 @@ export async function PUT(request, { params }) {
     const addedColorIds = colorIds.filter(colorId => !oldColorIds.includes(colorId));
 
     // Update the palette
+    const updateData = {
+      name,
+      schemeType,
+      colorIds,
+    };
+
+    // Only update access if provided
+    if (access) {
+      updateData.access = access;
+    }
+
     const updatedPalette = await prisma.palette.update({
       where: { id },
-      data: {
-        name,
-        schemeType,
-        colorIds,
-      },
+      data: updateData,
       include: {
         colors: true,
       },

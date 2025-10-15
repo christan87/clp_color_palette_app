@@ -10,12 +10,20 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { name, schemeType, colorIds } = await request.json();
+    const { name, schemeType, colorIds, access = 'PRIVATE' } = await request.json();
 
     // Validate required fields
     if (!name || !schemeType || !colorIds || colorIds.length === 0) {
       return NextResponse.json(
         { error: 'Name, scheme type, and colors are required' },
+        { status: 400 }
+      );
+    }
+
+    // Validate access field
+    if (!['PUBLIC', 'PRIVATE', 'FRIENDS'].includes(access)) {
+      return NextResponse.json(
+        { error: 'Access must be PUBLIC, PRIVATE, or FRIENDS' },
         { status: 400 }
       );
     }
@@ -26,6 +34,7 @@ export async function POST(request) {
         name,
         schemeType,
         colorIds,
+        access,
         userId: session.user.id,
       },
       include: {
