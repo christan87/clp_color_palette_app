@@ -2,9 +2,9 @@ import Link from "next/link";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="flex flex-col">
       {/* Hero Section */}
-      <main className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
+      <section className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-20">
         <div className="max-w-4xl mx-auto text-center">
           <div className="mb-8">
             <div className="inline-flex items-center gap-3 mb-6">
@@ -57,7 +57,7 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-      </main>
+      </section>
 
       {/* Features Section */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-900/50">
@@ -102,11 +102,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-8 text-center text-gray-600 dark:text-gray-400">
-        <p>© 2024 Color Palette Generator. Built for interior designers.</p>
-      </footer>
     </div>
   );
 }

@@ -20,6 +20,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   
+  // Friend list (array of user IDs)
+  friendIds     String[]  @db.ObjectId
+  
+  // Following/Followers (array of user IDs)
+  followingIds  String[]  @db.ObjectId
+  followerIds   String[]  @db.ObjectId
+  
   // Relations
   accounts      Account[]
   sessions      Session[]
