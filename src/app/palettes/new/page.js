@@ -172,6 +172,17 @@ export default function NewPalettePage() {
 
   const handleAddColor = () => {
     const selectedColor = colorOptions[selectedColorIndex];
+    
+    // Check if color already exists in palette (by hex code)
+    const colorExists = selectedPalette.some(
+      color => color.hex.toLowerCase() === selectedColor.hex.toLowerCase()
+    );
+    
+    if (colorExists) {
+      alert(`Color ${selectedColor.hex.toUpperCase()} already exists in your palette!`);
+      return;
+    }
+    
     const newColor = {
       ...selectedColor,
       name: colorDetails.name || '',
