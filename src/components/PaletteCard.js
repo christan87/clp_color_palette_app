@@ -1,6 +1,13 @@
+'use client';
+
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function PaletteCard({ palette }) {
+  const router = useRouter();
+  const [isDeleting, setIsDeleting] = useState(false);
+
   // Take first 45 colors for the preview grid (9x5)
   const previewColors = palette.colors.slice(0, 45).map(color => color.hex);
   
@@ -11,11 +18,50 @@ export default function PaletteCard({ palette }) {
     year: 'numeric'
   });
 
+  const handleDelete = async (e) => {
+    e.preventDefault(); // Prevent navigation to detail page
+    
+    if (!confirm(`Are you sure you want to delete "${palette.name}"?`)) {
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      const response = await fetch(`/api/palettes/${palette.id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete palette');
+      }
+
+      router.refresh(); // Refresh the page to show updated list
+    } catch (error) {
+      console.error('Error deleting palette:', error);
+      alert('Failed to delete palette. Please try again.');
+      setIsDeleting(false);
+    }
+  };
+
   return (
-    <Link 
-      href={`/palettes/${palette.id}`}
-      className="group block bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:scale-105"
-    >
+    <div className="group relative bg-white dark:bg-gray-800 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-200 dark:border-gray-700 hover:scale-105">
+      {/* Delete Button */}
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="absolute top-2 right-2 z-10 p-2 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+        title="Delete palette"
+      >
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <Link 
+        href={`/palettes/${palette.id}`}
+        className="block"
+      >
       {/* Color Grid Preview */}
       <div className="aspect-[9/5] grid grid-cols-9 grid-rows-5 gap-0">
         {previewColors.map((color, index) => (
@@ -50,6 +96,7 @@ export default function PaletteCard({ palette }) {
           Updated {formattedDate}
         </p>
       </div>
-    </Link>
+      </Link>
+    </div>
   );
 }
