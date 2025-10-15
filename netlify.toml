@@ -26,11 +26,4 @@
   status = 200
 
 # Context-specific environment variables
-[context.production.environment]
-  NODE_ENV = "production"
-
-[context.deploy-preview.environment]
-  NODE_ENV = "production"
-
-[context.branch-deploy.environment]
-  NODE_ENV = "production"
+# Note: NODE_ENV is automatically set by Next.js during build
