@@ -39,7 +39,7 @@ export default async function PalettesPage() {
           </div>
           
           <Link
-            href="/generator"
+            href="/palettes/new"
             className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
           >
             <svg 
@@ -74,7 +74,7 @@ export default async function PalettesPage() {
               Create your first color palette to get started
             </p>
             <Link
-              href="/generator"
+              href="/palettes/new"
               className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               Create Palette
