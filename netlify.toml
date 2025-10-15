@@ -2,8 +2,7 @@
 # Configuration file for Netlify deployment
 
 [build]
-  command = "npx prisma generate && npm run build"
-  publish = ".next"
+  command = "export NEXTAUTH_URL=$DEPLOY_PRIME_URL && npx prisma generate && npm run build"
 
 [build.environment]
   # Node.js version
@@ -19,3 +18,19 @@
   included_files = ["prisma/**", "src/lib/**", "node_modules/.prisma/**", "node_modules/@prisma/**"]
   # External modules that shouldn't be bundled
   external_node_modules = ["@prisma/client", ".prisma/client", "bcryptjs", "next-auth"]
+
+# Redirect rules for Next.js
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Context-specific environment variables
+[context.production.environment]
+  NODE_ENV = "production"
+
+[context.deploy-preview.environment]
+  NODE_ENV = "production"
+
+[context.branch-deploy.environment]
+  NODE_ENV = "production"

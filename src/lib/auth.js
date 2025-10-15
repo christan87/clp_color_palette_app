@@ -14,7 +14,7 @@ export const authOptions = {
       authorization: {
         url: "https://accounts.google.com/o/oauth2/v2/auth",
         params: {
-          prompt: "consent",
+          prompt: "select_account",
           access_type: "offline",
           response_type: "code",
           scope: "openid profile email"
