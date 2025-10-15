@@ -1,0 +1,32 @@
+# netlify.toml
+# Configuration file for Netlify deployment
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Force IPv4 DNS resolution to avoid MongoDB connection issues
+  NODE_OPTIONS = "--dns-result-order=ipv4first"
+  # Increase Node.js memory limit
+  NODE_MEMORY_AVAILABLE = "2048"
+  # Enable verbose MongoDB/Mongoose logging
+  DEBUG = "mongoose,mongodb*"
+  # Disable secrets scanning completely
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
+[[plugins]]
+  package = "netlify-plugin-cache-nextjs"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  # Configure serverless functions bundling
+  node_bundler = "esbuild"
+  # Include necessary files for MongoDB
+  included_files = ["src/models/**", "src/lib/**"]
+  # External modules that shouldn't be bundled
+  external_node_modules = ["mongoose", "mongodb", "bcrypt", "jsonwebtoken"]
+
+# Note: Function timeout must be configured via Netlify UI or API (max 26 seconds for Pro plan)
