@@ -13,7 +13,8 @@ export default function NewPalettePage() {
   const { data: session, status } = useSession();
   const [baseColor, setBaseColor] = useState('#6366f1');
   const [schemeType, setSchemeType] = useState('analogous');
-  const [palette, setPalette] = useState([]);
+  const [colorOptions, setColorOptions] = useState([]); // Generated color options
+  const [selectedPalette, setSelectedPalette] = useState([]); // Colors added to palette
   const [selectedColorIndex, setSelectedColorIndex] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [paletteName, setPaletteName] = useState('');
@@ -93,11 +94,8 @@ export default function NewPalettePage() {
         colors = [baseColor];
     }
 
-    setPalette(colors.map(hex => ({
+    setColorOptions(colors.map(hex => ({
       hex,
-      name: '',
-      company: '',
-      code: '',
       rgb: colord(hex).toRgbString(),
       hsl: colord(hex).toHslString(),
       cmyk: getCMYK(hex),
@@ -145,22 +143,29 @@ export default function NewPalettePage() {
   const handleColorClick = (index) => {
     setSelectedColorIndex(index);
     setColorDetails({
-      name: palette[index].name || '',
-      company: palette[index].company || '',
-      code: palette[index].code || '',
+      name: '',
+      company: '',
+      code: '',
     });
     setDrawerOpen(true);
   };
 
-  const handleUpdateColor = () => {
-    const updatedPalette = [...palette];
-    updatedPalette[selectedColorIndex] = {
-      ...updatedPalette[selectedColorIndex],
-      ...colorDetails,
+  const handleAddColor = () => {
+    const selectedColor = colorOptions[selectedColorIndex];
+    const newColor = {
+      ...selectedColor,
+      name: colorDetails.name || '',
+      company: colorDetails.company || '',
+      code: colorDetails.code || '',
     };
-    setPalette(updatedPalette);
+    setSelectedPalette([...selectedPalette, newColor]);
     setDrawerOpen(false);
     setSelectedColorIndex(null);
+    setColorDetails({ name: '', company: '', code: '' });
+  };
+
+  const handleRemoveColor = (index) => {
+    setSelectedPalette(selectedPalette.filter((_, i) => i !== index));
   };
 
   const handleSavePalette = async () => {
@@ -169,8 +174,8 @@ export default function NewPalettePage() {
       return;
     }
 
-    if (palette.some(c => !c.name || !c.company || !c.code)) {
-      alert('Please add details (name, company, code) for all colors');
+    if (selectedPalette.length === 0) {
+      alert('Please add at least one color to your palette');
       return;
     }
 
@@ -179,7 +184,7 @@ export default function NewPalettePage() {
     try {
       // First, create all colors
       const colorIds = [];
-      for (const color of palette) {
+      for (const color of selectedPalette) {
         const response = await fetch('/api/colors', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -225,7 +230,7 @@ export default function NewPalettePage() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  const selectedColor = selectedColorIndex !== null ? palette[selectedColorIndex] : null;
+  const selectedColor = selectedColorIndex !== null ? colorOptions[selectedColorIndex] : null;
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen">
@@ -308,13 +313,13 @@ export default function NewPalettePage() {
           </div>
         </div>
 
-        {/* Palette Display */}
+        {/* Color Options */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
           <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
-            Your Palette
+            Color Options
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-            {palette.map((color, index) => (
+            {colorOptions.map((color, index) => (
               <div
                 key={index}
                 className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 cursor-pointer"
@@ -331,9 +336,9 @@ export default function NewPalettePage() {
                     >
                       <span className="flex items-center gap-2">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                         </svg>
-                        Click to edit
+                        Click to add
                       </span>
                     </div>
                   </div>
@@ -342,23 +347,80 @@ export default function NewPalettePage() {
                   <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200 text-center">
                     {color.hex.toUpperCase()}
                   </p>
-                  {color.name && (
-                    <p className="text-xs text-gray-600 dark:text-gray-400 text-center mt-1 truncate">
-                      {color.name}
-                    </p>
-                  )}
-                  {color.company && (
-                    <p className="text-xs text-gray-500 dark:text-gray-500 text-center truncate">
-                      {color.company} {color.code}
-                    </p>
-                  )}
                 </div>
               </div>
             ))}
           </div>
+        </div>
 
-          {/* Save Button */}
-          <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex gap-4">
+        {/* Your Palette */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
+          <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
+            Your Palette
+            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
+              ({selectedPalette.length} {selectedPalette.length === 1 ? 'color' : 'colors'})
+            </span>
+          </h2>
+          {selectedPalette.length === 0 ? (
+            <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
+              <svg 
+                className="w-16 h-16 mx-auto text-gray-400 mb-4" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+              </svg>
+              <p className="text-gray-600 dark:text-gray-400">
+                Click colors above to add them to your palette
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {selectedPalette.map((color, index) => (
+                <div
+                  key={index}
+                  className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+                >
+                  <div
+                    className="h-32"
+                    style={{ backgroundColor: color.hex }}
+                  >
+                    <button
+                      onClick={() => handleRemoveColor(index)}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      title="Remove color"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-gray-700 p-3">
+                    <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
+                      {color.hex.toUpperCase()}
+                    </p>
+                    {color.name && (
+                      <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
+                        {color.name}
+                      </p>
+                    )}
+                    {color.company && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                        {color.company} {color.code}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+        </div>
+
+        {/* Save/Cancel Buttons */}
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
+          <div className="flex gap-4">
             <button
               onClick={handleSavePalette}
               disabled={saving}
@@ -449,7 +511,7 @@ export default function NewPalettePage() {
               <div className="space-y-4 mb-6">
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
-                    Color Name *
+                    Color Name <span className="text-gray-400 font-normal">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -461,7 +523,7 @@ export default function NewPalettePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
-                    Company *
+                    Company <span className="text-gray-400 font-normal">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -473,7 +535,7 @@ export default function NewPalettePage() {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">
-                    Color Code *
+                    Color Code <span className="text-gray-400 font-normal">(optional)</span>
                   </label>
                   <input
                     type="text"
@@ -487,11 +549,10 @@ export default function NewPalettePage() {
 
               {/* Update Button */}
               <button
-                onClick={handleUpdateColor}
-                disabled={!colorDetails.name || !colorDetails.company || !colorDetails.code}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleAddColor}
+                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-md hover:shadow-lg"
               >
-                Update Color
+                Add to Palette
               </button>
             </div>
           </div>

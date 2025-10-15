@@ -92,13 +92,13 @@ model Palette {
 
 model Color {
   id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  name       String   // Color name (e.g., "Sky Blue")
+  name       String?  // Color name (e.g., "Sky Blue") - optional
   hex        String   // Hex color code (e.g., "#87CEEB")
   rgb        String   // RGB values (e.g., "135, 206, 235")
   hsl        String   // HSL values (e.g., "197, 71%, 73%")
   cmyk       String   // CMYK values (e.g., "43%, 12%, 0%, 8%")
-  company    String   // Paint company name (e.g., "Sherwin-Williams")
-  code       String   // Company-specific color code (e.g., "SW 6494")
+  company    String?  // Paint company name (e.g., "Sherwin-Williams") - optional
+  code       String?  // Company-specific color code (e.g., "SW 6494") - optional
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   

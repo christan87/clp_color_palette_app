@@ -12,10 +12,10 @@ export async function POST(request) {
 
     const { name, hex, rgb, hsl, cmyk, company, code } = await request.json();
 
-    // Validate required fields
-    if (!name || !hex || !rgb || !hsl || !cmyk || !company || !code) {
+    // Validate required fields (only hex, rgb, hsl, cmyk are required)
+    if (!hex || !rgb || !hsl || !cmyk) {
       return NextResponse.json(
-        { error: 'All fields are required' },
+        { error: 'Hex, RGB, HSL, and CMYK are required' },
         { status: 400 }
       );
     }
@@ -23,13 +23,13 @@ export async function POST(request) {
     // Create the color
     const color = await prisma.color.create({
       data: {
-        name,
+        name: name || null,
         hex,
         rgb,
         hsl,
         cmyk,
-        company,
-        code,
+        company: company || null,
+        code: code || null,
       },
     });
 
