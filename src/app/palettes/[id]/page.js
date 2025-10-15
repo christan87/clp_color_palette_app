@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
-import PaletteDetail from "@/components/PaletteDetail";
+import EditPalette from "@/components/EditPalette";
 
 export default async function PaletteDetailPage({ params }) {
   const session = await auth();
@@ -10,10 +10,12 @@ export default async function PaletteDetailPage({ params }) {
     redirect("/auth/signin");
   }
 
+  const { id } = await params;
+
   // Fetch the specific palette with colors
   const palette = await prisma.palette.findUnique({
     where: {
-      id: params.id,
+      id,
     },
     include: {
       colors: true,
@@ -29,13 +31,17 @@ export default async function PaletteDetailPage({ params }) {
     redirect("/palettes");
   }
 
-  const formattedDate = new Date(palette.updatedAt).toLocaleDateString('en-US', {
-    month: 'long',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+  // Serialize the palette data for client component
+  const serializedPalette = {
+    ...palette,
+    createdAt: palette.createdAt.toISOString(),
+    updatedAt: palette.updatedAt.toISOString(),
+    colors: palette.colors.map(color => ({
+      ...color,
+      createdAt: color.createdAt.toISOString(),
+      updatedAt: color.updatedAt.toISOString(),
+    })),
+  };
 
-  return <PaletteDetail palette={palette} formattedDate={formattedDate} />;
+  return <EditPalette palette={serializedPalette} />;
 }

@@ -4,23 +4,21 @@ import { useState, useEffect } from 'react';
 import { colord, extend } from 'colord';
 import namesPlugin from 'colord/plugins/names';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
 
 extend([namesPlugin]);
 
-export default function NewPalettePage() {
+export default function EditPalette({ palette }) {
   const router = useRouter();
-  const { data: session, status } = useSession();
   const [baseColor, setBaseColor] = useState('#6366f1');
-  const [schemeType, setSchemeType] = useState('analogous');
-  const [colorOptions, setColorOptions] = useState([]); // Generated color options
-  const [selectedPalette, setSelectedPalette] = useState([]); // Colors added to palette
+  const [schemeType, setSchemeType] = useState(palette.schemeType);
+  const [colorOptions, setColorOptions] = useState([]);
+  const [selectedPalette, setSelectedPalette] = useState(palette.colors);
   const [selectedColorIndex, setSelectedColorIndex] = useState(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [paletteName, setPaletteName] = useState('');
+  const [paletteName, setPaletteName] = useState(palette.name);
   const [saving, setSaving] = useState(false);
+  const [editingExisting, setEditingExisting] = useState(false);
 
-  // Color details for the selected color
   const [colorDetails, setColorDetails] = useState({
     name: '',
     company: '',
@@ -107,10 +105,9 @@ export default function NewPalettePage() {
   }, [baseColor, schemeType]);
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/auth/signin');
-    }
-  }, [status, router]);
+    // Sort initial palette colors on load
+    setSelectedPalette(sortColorsByHue(palette.colors));
+  }, []);
 
   const getCMYK = (hex) => {
     const rgb = colord(hex).toRgb();
@@ -167,6 +164,19 @@ export default function NewPalettePage() {
       company: '',
       code: '',
     });
+    setEditingExisting(false);
+    setDrawerOpen(true);
+  };
+
+  const handleExistingColorClick = (index) => {
+    const color = selectedPalette[index];
+    setSelectedColorIndex(index);
+    setColorDetails({
+      name: color.name || '',
+      company: color.company || '',
+      code: color.code || '',
+    });
+    setEditingExisting(true);
     setDrawerOpen(true);
   };
 
@@ -180,6 +190,20 @@ export default function NewPalettePage() {
     };
     const updatedPalette = sortColorsByHue([...selectedPalette, newColor]);
     setSelectedPalette(updatedPalette);
+    setDrawerOpen(false);
+    setSelectedColorIndex(null);
+    setColorDetails({ name: '', company: '', code: '' });
+  };
+
+  const handleUpdateColor = () => {
+    const updatedPalette = [...selectedPalette];
+    updatedPalette[selectedColorIndex] = {
+      ...updatedPalette[selectedColorIndex],
+      name: colorDetails.name || '',
+      company: colorDetails.company || '',
+      code: colorDetails.code || '',
+    };
+    setSelectedPalette(sortColorsByHue(updatedPalette));
     setDrawerOpen(false);
     setSelectedColorIndex(null);
     setColorDetails({ name: '', company: '', code: '' });
@@ -204,31 +228,53 @@ export default function NewPalettePage() {
     setSaving(true);
 
     try {
-      // First, create all colors
+      // Create or update colors
       const colorIds = [];
       for (const color of selectedPalette) {
-        const response = await fetch('/api/colors', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: color.name,
-            hex: color.hex,
-            rgb: color.rgb,
-            hsl: color.hsl,
-            cmyk: color.cmyk,
-            company: color.company,
-            code: color.code,
-          }),
-        });
+        if (color.id) {
+          // Update existing color
+          const response = await fetch(`/api/colors/${color.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: color.name || null,
+              hex: color.hex,
+              rgb: color.rgb,
+              hsl: color.hsl,
+              cmyk: color.cmyk,
+              company: color.company || null,
+              code: color.code || null,
+            }),
+          });
 
-        if (!response.ok) throw new Error('Failed to create color');
-        const createdColor = await response.json();
-        colorIds.push(createdColor.id);
+          if (!response.ok) throw new Error('Failed to update color');
+          const updatedColor = await response.json();
+          colorIds.push(updatedColor.id);
+        } else {
+          // Create new color
+          const response = await fetch('/api/colors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              name: color.name || null,
+              hex: color.hex,
+              rgb: color.rgb,
+              hsl: color.hsl,
+              cmyk: color.cmyk,
+              company: color.company || null,
+              code: color.code || null,
+            }),
+          });
+
+          if (!response.ok) throw new Error('Failed to create color');
+          const createdColor = await response.json();
+          colorIds.push(createdColor.id);
+        }
       }
 
-      // Then create the palette
-      const paletteResponse = await fetch('/api/palettes', {
-        method: 'POST',
+      // Update the palette
+      const paletteResponse = await fetch(`/api/palettes/${palette.id}`, {
+        method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: paletteName,
@@ -237,7 +283,7 @@ export default function NewPalettePage() {
         }),
       });
 
-      if (!paletteResponse.ok) throw new Error('Failed to create palette');
+      if (!paletteResponse.ok) throw new Error('Failed to update palette');
 
       router.push('/palettes');
     } catch (error) {
@@ -248,11 +294,9 @@ export default function NewPalettePage() {
     }
   };
 
-  if (status === 'loading') {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
-  }
-
-  const selectedColor = selectedColorIndex !== null ? colorOptions[selectedColorIndex] : null;
+  const selectedColor = editingExisting 
+    ? selectedPalette[selectedColorIndex]
+    : (selectedColorIndex !== null ? colorOptions[selectedColorIndex] : null);
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen">
@@ -260,10 +304,10 @@ export default function NewPalettePage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 dark:from-purple-400 dark:via-pink-400 dark:to-orange-400 bg-clip-text text-transparent">
-            Create New Palette
+            Edit Palette
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
-            Generate colors and add details to create your palette
+            Update your palette colors and details
           </p>
         </div>
 
@@ -398,46 +442,52 @@ export default function NewPalettePage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {selectedPalette.map((color, index) => (
-                <div
-                  key={index}
-                  className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
-                >
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-4" style={{ minWidth: 'min-content' }}>
+                {selectedPalette.map((color, index) => (
                   <div
-                    className="h-32"
-                    style={{ backgroundColor: color.hex }}
+                    key={index}
+                    className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 flex-shrink-0"
+                    style={{ width: '200px' }}
                   >
-                    <button
-                      onClick={() => handleRemoveColor(index)}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                      title="Remove color"
+                    <div
+                      className="h-32 cursor-pointer"
+                      style={{ backgroundColor: color.hex }}
+                      onClick={() => handleExistingColorClick(index)}
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
-                  </div>
-                  <div className="bg-gray-50 dark:bg-gray-700 p-3">
-                    <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
-                      {color.hex.toUpperCase()}
-                    </p>
-                    {color.name && (
-                      <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
-                        {color.name}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveColor(index);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Remove color"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700 p-3">
+                      <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
+                        {color.hex.toUpperCase()}
                       </p>
-                    )}
-                    {color.company && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {color.company} {color.code}
-                      </p>
-                    )}
+                      {color.name && (
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
+                          {color.name}
+                        </p>
+                      )}
+                      {color.company && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {color.company} {color.code}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
-
         </div>
 
         {/* Save/Cancel Buttons */}
@@ -475,7 +525,7 @@ export default function NewPalettePage() {
               {/* Header */}
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Color Details
+                  {editingExisting ? 'Edit Color' : 'Color Details'}
                 </h3>
                 <button
                   onClick={() => setDrawerOpen(false)}
@@ -569,12 +619,12 @@ export default function NewPalettePage() {
                 </div>
               </div>
 
-              {/* Update Button */}
+              {/* Action Button */}
               <button
-                onClick={handleAddColor}
+                onClick={editingExisting ? handleUpdateColor : handleAddColor}
                 className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-md hover:shadow-lg"
               >
-                Add to Palette
+                {editingExisting ? 'Update Color' : 'Add to Palette'}
               </button>
             </div>
           </div>
