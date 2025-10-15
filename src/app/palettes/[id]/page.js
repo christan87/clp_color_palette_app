@@ -10,10 +10,13 @@ export default async function PaletteDetailPage({ params }) {
     redirect("/auth/signin");
   }
 
-  // Fetch the specific palette
+  // Fetch the specific palette with colors
   const palette = await prisma.palette.findUnique({
     where: {
       id: params.id,
+    },
+    include: {
+      colors: true,
     },
   });
 
@@ -71,18 +74,24 @@ export default async function PaletteDetailPage({ params }) {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
           <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-9 gap-4">
             {palette.colors.map((color, index) => (
-              <div key={index} className="group">
+              <div key={color.id} className="group">
                 <div
                   className="aspect-square rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer hover:scale-110 border-2 border-gray-200 dark:border-gray-700"
-                  style={{ backgroundColor: color }}
-                  title={color}
+                  style={{ backgroundColor: color.hex }}
+                  title={`${color.name} - ${color.hex}`}
                   onClick={() => {
-                    navigator.clipboard.writeText(color);
+                    navigator.clipboard.writeText(color.hex);
                     // You could add a toast notification here
                   }}
                 />
-                <p className="text-xs text-center mt-2 font-mono text-gray-600 dark:text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
-                  {color}
+                <p className="text-xs text-center mt-2 font-semibold text-gray-700 dark:text-gray-300 truncate">
+                  {color.name}
+                </p>
+                <p className="text-xs text-center font-mono text-gray-500 dark:text-gray-500 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  {color.hex}
+                </p>
+                <p className="text-xs text-center text-gray-400 dark:text-gray-600 truncate">
+                  {color.company}
                 </p>
               </div>
             ))}
@@ -93,7 +102,7 @@ export default async function PaletteDetailPage({ params }) {
         <div className="mt-8 flex flex-wrap gap-4">
           <button
             onClick={() => {
-              const colorsText = palette.colors.join('\n');
+              const colorsText = palette.colors.map(c => `${c.name} (${c.hex}) - ${c.company} ${c.code}`).join('\n');
               navigator.clipboard.writeText(colorsText);
             }}
             className="inline-flex items-center justify-center px-6 py-3 text-base font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"

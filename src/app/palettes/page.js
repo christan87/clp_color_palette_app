@@ -11,10 +11,13 @@ export default async function PalettesPage() {
     redirect("/auth/signin");
   }
 
-  // Fetch user's palettes
+  // Fetch user's palettes with colors
   const palettes = await prisma.palette.findMany({
     where: {
       userId: session.user.id,
+    },
+    include: {
+      colors: true,
     },
     orderBy: {
       updatedAt: "desc",

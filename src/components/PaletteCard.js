@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function PaletteCard({ palette }) {
   // Take first 45 colors for the preview grid (9x5)
-  const previewColors = palette.colors.slice(0, 45);
+  const previewColors = palette.colors.slice(0, 45).map(color => color.hex);
   
   // Format date
   const formattedDate = new Date(palette.updatedAt).toLocaleDateString('en-US', {
