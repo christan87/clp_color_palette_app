@@ -22,13 +22,30 @@ export default function LandingPage() {
             Create stunning, harmonious color schemes for your interior design projects. 
             Generate beautiful palettes with just a few clicks.
           </p>
-
+          {/* Launch Generator Button */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Link
               href="/generator"
               className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
             >
               Launch Generator
+              <svg 
+                className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+            </Link>
+          </div>
+          {/* Launch My Palettes Button */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Link
+              href="/palettes"
+              className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+            >
+              My Palettes
               <svg 
                 className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" 
                 fill="none" 
