@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import prisma from "./prisma";
 
 export const authOptions = {
+  trustHost: true,
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
@@ -66,17 +67,7 @@ export const authOptions = {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
-  cookies: {
-    sessionToken: {
-      name: `${process.env.NODE_ENV === 'production' ? '__Secure-' : ''}next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    }
-  },
+  useSecureCookies: process.env.NODE_ENV === 'production',
   callbacks: {
     async jwt({ token, user, account }) {
       if (user) {
