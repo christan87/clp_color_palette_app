@@ -2,6 +2,58 @@ import { NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 
+export async function GET(request, { params }) {
+  try {
+    const session = await auth();
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id } = await params;
+
+    // Fetch the palette
+    const palette = await prisma.palette.findUnique({
+      where: { id },
+      include: {
+        colors: true,
+      },
+    });
+
+    if (!palette) {
+      return NextResponse.json({ error: 'Palette not found' }, { status: 404 });
+    }
+
+    // Check if user has access to this palette
+    if (palette.userId !== session.user.id) {
+      // Get current user's friend IDs
+      const currentUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { friendIds: true },
+      });
+
+      const friendIds = currentUser?.friendIds || [];
+
+      // Check access permissions
+      const hasAccess =
+        palette.access === 'PUBLIC' ||
+        (palette.access === 'FRIENDS' && friendIds.includes(palette.userId));
+
+      if (!hasAccess) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    return NextResponse.json(palette);
+  } catch (error) {
+    console.error('Error fetching palette:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch palette' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PUT(request, { params }) {
   try {
     const session = await auth();

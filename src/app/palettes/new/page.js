@@ -20,6 +20,7 @@ export default function NewPalettePage() {
   const [paletteName, setPaletteName] = useState('');
   const [paletteAccess, setPaletteAccess] = useState('PRIVATE');
   const [saving, setSaving] = useState(false);
+  const [editingExisting, setEditingExisting] = useState(false);
 
   // Color details for the selected color
   const [colorDetails, setColorDetails] = useState({
@@ -113,6 +114,41 @@ export default function NewPalettePage() {
     }
   }, [status, router]);
 
+  // Check for color query parameter and add it to palette
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const colorParam = params.get('color');
+    
+    if (colorParam) {
+      // Add # if not present
+      const hexColor = colorParam.startsWith('#') ? colorParam : `#${colorParam}`;
+      
+      // Validate it's a valid hex color
+      try {
+        const color = colord(hexColor);
+        if (color.isValid()) {
+          // Set as base color
+          setBaseColor(hexColor);
+          
+          // Automatically add to palette
+          const colorData = {
+            hex: hexColor,
+            rgb: color.toRgbString(),
+            hsl: color.toHslString(),
+            cmyk: getCMYK(hexColor),
+            name: '',
+            company: '',
+            code: '',
+          };
+          
+          setSelectedPalette([colorData]);
+        }
+      } catch (error) {
+        console.error('Invalid color parameter:', error);
+      }
+    }
+  }, []);
+
   const getCMYK = (hex) => {
     const rgb = colord(hex).toRgb();
     const r = rgb.r / 255;
@@ -168,6 +204,19 @@ export default function NewPalettePage() {
       company: '',
       code: '',
     });
+    setEditingExisting(false);
+    setDrawerOpen(true);
+  };
+
+  const handleExistingColorClick = (index) => {
+    const color = selectedPalette[index];
+    setSelectedColorIndex(index);
+    setColorDetails({
+      name: color.name || '',
+      company: color.company || '',
+      code: color.code || '',
+    });
+    setEditingExisting(true);
     setDrawerOpen(true);
   };
 
@@ -192,6 +241,20 @@ export default function NewPalettePage() {
     };
     const updatedPalette = sortColorsByHue([...selectedPalette, newColor]);
     setSelectedPalette(updatedPalette);
+    setDrawerOpen(false);
+    setSelectedColorIndex(null);
+    setColorDetails({ name: '', company: '', code: '' });
+  };
+
+  const handleUpdateColor = () => {
+    const updatedPalette = [...selectedPalette];
+    updatedPalette[selectedColorIndex] = {
+      ...updatedPalette[selectedColorIndex],
+      name: colorDetails.name || '',
+      company: colorDetails.company || '',
+      code: colorDetails.code || '',
+    };
+    setSelectedPalette(sortColorsByHue(updatedPalette));
     setDrawerOpen(false);
     setSelectedColorIndex(null);
     setColorDetails({ name: '', company: '', code: '' });
@@ -265,7 +328,9 @@ export default function NewPalettePage() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  const selectedColor = selectedColorIndex !== null ? colorOptions[selectedColorIndex] : null;
+  const selectedColor = editingExisting 
+    ? selectedPalette[selectedColorIndex]
+    : (selectedColorIndex !== null ? colorOptions[selectedColorIndex] : null);
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen">
@@ -436,11 +501,15 @@ export default function NewPalettePage() {
                   className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
                 >
                   <div
-                    className="h-32"
+                    className="h-32 cursor-pointer"
                     style={{ backgroundColor: color.hex }}
+                    onClick={() => handleExistingColorClick(index)}
                   >
                     <button
-                      onClick={() => handleRemoveColor(index)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveColor(index);
+                      }}
                       className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                       title="Remove color"
                     >
@@ -506,7 +575,7 @@ export default function NewPalettePage() {
               {/* Header */}
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                  Color Details
+                  {editingExisting ? 'Edit Color' : 'Color Details'}
                 </h3>
                 <button
                   onClick={() => setDrawerOpen(false)}
@@ -600,12 +669,12 @@ export default function NewPalettePage() {
                 </div>
               </div>
 
-              {/* Update Button */}
+              {/* Action Button */}
               <button
-                onClick={handleAddColor}
+                onClick={editingExisting ? handleUpdateColor : handleAddColor}
                 className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-md hover:shadow-lg"
               >
-                Add to Palette
+                {editingExisting ? 'Update Color' : 'Add to Palette'}
               </button>
             </div>
           </div>
