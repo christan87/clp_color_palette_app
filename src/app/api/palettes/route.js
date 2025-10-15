@@ -33,6 +33,20 @@ export async function POST(request) {
       },
     });
 
+    // Update each color's paletteIds to include this new palette
+    await Promise.all(
+      colorIds.map((colorId) =>
+        prisma.color.update({
+          where: { id: colorId },
+          data: {
+            paletteIds: {
+              push: palette.id,
+            },
+          },
+        })
+      )
+    );
+
     return NextResponse.json(palette, { status: 201 });
   } catch (error) {
     console.error('Error creating palette:', error);

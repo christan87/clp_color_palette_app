@@ -34,6 +34,11 @@ export async function PUT(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Get old color IDs to determine which colors were removed
+    const oldColorIds = palette.colorIds;
+    const removedColorIds = oldColorIds.filter(colorId => !colorIds.includes(colorId));
+    const addedColorIds = colorIds.filter(colorId => !oldColorIds.includes(colorId));
+
     // Update the palette
     const updatedPalette = await prisma.palette.update({
       where: { id },
@@ -46,6 +51,52 @@ export async function PUT(request, { params }) {
         colors: true,
       },
     });
+
+    // Add palette ID to newly added colors
+    if (addedColorIds.length > 0) {
+      await Promise.all(
+        addedColorIds.map((colorId) =>
+          prisma.color.update({
+            where: { id: colorId },
+            data: {
+              paletteIds: {
+                push: id,
+              },
+            },
+          })
+        )
+      );
+    }
+
+    // Remove palette ID from removed colors and delete if no palettes remain
+    if (removedColorIds.length > 0) {
+      await Promise.all(
+        removedColorIds.map(async (colorId) => {
+          const color = await prisma.color.findUnique({
+            where: { id: colorId },
+          });
+
+          if (color) {
+            const updatedPaletteIds = color.paletteIds.filter(pid => pid !== id);
+
+            if (updatedPaletteIds.length === 0) {
+              // Delete color if no palettes reference it
+              await prisma.color.delete({
+                where: { id: colorId },
+              });
+            } else {
+              // Update color's paletteIds
+              await prisma.color.update({
+                where: { id: colorId },
+                data: {
+                  paletteIds: updatedPaletteIds,
+                },
+              });
+            }
+          }
+        })
+      );
+    }
 
     return NextResponse.json(updatedPalette);
   } catch (error) {
@@ -80,10 +131,41 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    // Get all color IDs from the palette before deletion
+    const colorIds = palette.colorIds;
+
     // Delete the palette
     await prisma.palette.delete({
       where: { id },
     });
+
+    // Remove palette ID from all colors and delete orphaned colors
+    await Promise.all(
+      colorIds.map(async (colorId) => {
+        const color = await prisma.color.findUnique({
+          where: { id: colorId },
+        });
+
+        if (color) {
+          const updatedPaletteIds = color.paletteIds.filter(pid => pid !== id);
+
+          if (updatedPaletteIds.length === 0) {
+            // Delete color if no palettes reference it
+            await prisma.color.delete({
+              where: { id: colorId },
+            });
+          } else {
+            // Update color's paletteIds
+            await prisma.color.update({
+              where: { id: colorId },
+              data: {
+                paletteIds: updatedPaletteIds,
+              },
+            });
+          }
+        }
+      })
+    );
 
     return NextResponse.json({ message: 'Palette deleted successfully' });
   } catch (error) {
