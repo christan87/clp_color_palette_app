@@ -13,6 +13,7 @@ export default function Navbar() {
   const [searchResults, setSearchResults] = useState({ colors: [], palettes: [], users: [] });
   const [showResults, setShowResults] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const searchRef = useRef(null);
 
   const isActive = (path) => pathname === path;
@@ -327,12 +328,71 @@ export default function Navbar() {
           </div>
 
           {/* Mobile Menu Button */}
-          <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
         </div>
+
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 py-4">
+            <div className="flex flex-col space-y-3">
+              <Link
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  isActive('/')
+                    ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                Home
+              </Link>
+              <Link
+                href="/generator"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  isActive('/generator')
+                    ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                Generator
+              </Link>
+              <Link
+                href="/palettes"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-2 font-medium transition-colors ${
+                  isActive('/palettes')
+                    ? 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                }`}
+              >
+                My Palettes
+              </Link>
+              {session && (
+                <Link
+                  href="/users/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="px-4 py-2 font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Account Settings
+                </Link>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -28,9 +28,11 @@ model User {
   followerIds   String[]  @db.ObjectId
   
   // Relations
-  accounts      Account[]
-  sessions      Session[]
-  palettes      Palette[]
+  accounts              Account[]
+  sessions              Session[]
+  palettes              Palette[]
+  sentFriendRequests    FriendRequest[] @relation("SentRequests")
+  receivedFriendRequests FriendRequest[] @relation("ReceivedRequests")
   
   @@map("users")
 }
@@ -113,4 +115,25 @@ model Color {
   palettes   Palette[] @relation(fields: [paletteIds], references: [id])
   
   @@map("colors")
+}
+
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model FriendRequest {
+  id         String              @id @default(auto()) @map("_id") @db.ObjectId
+  senderId   String              @db.ObjectId
+  receiverId String              @db.ObjectId
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
+  
+  sender   User @relation("SentRequests", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("ReceivedRequests", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@unique([senderId, receiverId])
+  @@map("friend_requests")
 }

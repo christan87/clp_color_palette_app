@@ -4,12 +4,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function AccountSettings({ user }) {
+export default function AccountSettings({ user, friendRequests }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user.name || '');
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile'); // profile, friends, followers, following
+  const [activeTab, setActiveTab] = useState('profile'); // profile, friends, followers, following, requests
+  const [processingRequest, setProcessingRequest] = useState(null);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -73,6 +74,27 @@ export default function AccountSettings({ user }) {
     } catch (error) {
       console.error('Error unfollowing:', error);
       alert('Failed to unfollow. Please try again.');
+    }
+  };
+
+  const handleFriendRequest = async (requestId, action) => {
+    setProcessingRequest(requestId);
+    try {
+      const response = await fetch('/api/users/friend-requests', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ requestId, action }),
+      });
+
+      if (!response.ok) throw new Error(`Failed to ${action} friend request`);
+
+      alert(`Friend request ${action}ed successfully!`);
+      router.refresh();
+    } catch (error) {
+      console.error(`Error ${action}ing friend request:`, error);
+      alert(`Failed to ${action} friend request. Please try again.`);
+    } finally {
+      setProcessingRequest(null);
     }
   };
 
@@ -169,6 +191,19 @@ export default function AccountSettings({ user }) {
                 }`}
               >
                 Following ({user.following.length})
+              </button>
+              <button
+                onClick={() => setActiveTab('requests')}
+                className={`px-6 py-4 text-sm font-semibold border-b-2 transition-colors relative ${
+                  activeTab === 'requests'
+                    ? 'border-purple-600 text-purple-600 dark:text-purple-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                }`}
+              >
+                Requests ({friendRequests.length})
+                {friendRequests.length > 0 && (
+                  <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full"></span>
+                )}
               </button>
             </nav>
           </div>
@@ -342,6 +377,63 @@ export default function AccountSettings({ user }) {
                     Unfollow
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Friend Requests Tab */}
+            {activeTab === 'requests' && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  Friend Requests
+                </h3>
+                {friendRequests.length === 0 ? (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 dark:text-gray-400">No pending friend requests</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {friendRequests.map((request) => (
+                      <div
+                        key={request.id}
+                        className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 flex items-center gap-3"
+                      >
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-lg flex-shrink-0">
+                          {request.sender.name?.[0]?.toUpperCase() || request.sender.email[0].toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <Link
+                            href={`/users/${request.sender.id}`}
+                            className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:text-purple-600 dark:hover:text-purple-400 truncate block"
+                          >
+                            {request.sender.name || 'Unnamed User'}
+                          </Link>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {request.sender.email}
+                          </p>
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            {new Date(request.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleFriendRequest(request.id, 'accept')}
+                            disabled={processingRequest === request.id}
+                            className="px-3 py-1 text-xs font-semibold text-white bg-green-600 hover:bg-green-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {processingRequest === request.id ? 'Processing...' : 'Accept'}
+                          </button>
+                          <button
+                            onClick={() => handleFriendRequest(request.id, 'reject')}
+                            disabled={processingRequest === request.id}
+                            className="px-3 py-1 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

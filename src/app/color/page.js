@@ -34,6 +34,7 @@ export default function ColorPage() {
   const [palettes, setPalettes] = useState([]);
   const [loadingPalettes, setLoadingPalettes] = useState(false);
   const [addingToPalette, setAddingToPalette] = useState(null);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -193,42 +194,42 @@ export default function ColorPage() {
 
   return (
     <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 min-h-screen">
-      <div className="flex h-screen">
+      <div className="flex flex-col lg:flex-row lg:h-screen">
         {/* Main Color Display Area */}
-        <div className="flex-1 flex items-center justify-center p-8">
-          <div className="flex gap-8 items-center">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8 min-h-[50vh] lg:min-h-0">
+          <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 items-center w-full max-w-2xl">
             {/* Original Color */}
-            <div className="text-center">
+            <div className="text-center flex-1">
               <div
-                className="w-64 h-64 rounded-2xl shadow-2xl border-4 border-white dark:border-gray-700 transition-all duration-300"
+                className="w-40 h-40 sm:w-48 sm:h-48 lg:w-64 lg:h-64 rounded-2xl shadow-2xl border-4 border-white dark:border-gray-700 transition-all duration-300 mx-auto"
                 style={{ backgroundColor: originalColor }}
               />
               <p className="mt-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                 Original
               </p>
-              <p className="text-lg font-mono font-bold text-gray-900 dark:text-gray-100">
+              <p className="text-base sm:text-lg font-mono font-bold text-gray-900 dark:text-gray-100">
                 {originalColor.toUpperCase()}
               </p>
             </div>
 
             {/* Arrow */}
             {hasEdits && (
-              <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-500 rotate-90 sm:rotate-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
               </svg>
             )}
 
             {/* Edited Color */}
             {hasEdits && (
-              <div className="text-center">
+              <div className="text-center flex-1">
                 <div
-                  className="w-64 h-64 rounded-2xl shadow-2xl border-4 border-white dark:border-gray-700 transition-all duration-300"
+                  className="w-40 h-40 sm:w-48 sm:h-48 lg:w-64 lg:h-64 rounded-2xl shadow-2xl border-4 border-white dark:border-gray-700 transition-all duration-300 mx-auto"
                   style={{ backgroundColor: editedColor }}
                 />
                 <p className="mt-4 text-sm font-semibold text-gray-600 dark:text-gray-400">
                   Edited
                 </p>
-                <p className="text-lg font-mono font-bold text-gray-900 dark:text-gray-100">
+                <p className="text-base sm:text-lg font-mono font-bold text-gray-900 dark:text-gray-100">
                   {editedColor.toUpperCase()}
                 </p>
               </div>
@@ -236,17 +237,40 @@ export default function ColorPage() {
           </div>
         </div>
 
-        {/* Right Drawer - Always Open */}
-        <div className="w-96 bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto border-l border-gray-200 dark:border-gray-700">
+        {/* Mobile Toggle Button */}
+        <button
+          onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+          className="lg:hidden fixed bottom-4 right-4 z-30 p-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-2xl hover:from-purple-700 hover:to-pink-700 transition-all"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+        </button>
+
+        {/* Right Drawer - Always Open on Desktop, Toggleable on Mobile */}
+        <div className={`${
+          mobileDrawerOpen ? 'fixed inset-0 z-40' : 'hidden'
+        } lg:relative lg:block w-full lg:w-96 bg-white dark:bg-gray-800 shadow-2xl overflow-y-auto border-l border-gray-200 dark:border-gray-700`}>
           <div className="p-6">
             {/* Header */}
-            <div className="mb-6">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                Color Editor
-              </h2>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                Adjust and save your color
-              </p>
+            <div className="mb-6 flex justify-between items-center">
+              <div>
+                <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                  Color Editor
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Adjust and save your color
+                </p>
+              </div>
+              {/* Close button for mobile */}
+              <button
+                onClick={() => setMobileDrawerOpen(false)}
+                className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
             {/* Color Wheel Picker */}

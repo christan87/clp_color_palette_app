@@ -76,6 +76,27 @@ export default async function AccountPage() {
     },
   });
 
+  // Fetch pending friend requests
+  const friendRequests = await prisma.friendRequest.findMany({
+    where: {
+      receiverId: session.user.id,
+      status: "PENDING",
+    },
+    include: {
+      sender: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+
   const serializedUser = {
     ...user,
     createdAt: user.createdAt.toISOString(),
@@ -84,5 +105,11 @@ export default async function AccountPage() {
     following,
   };
 
-  return <AccountSettings user={serializedUser} />;
+  const serializedFriendRequests = friendRequests.map(req => ({
+    ...req,
+    createdAt: req.createdAt.toISOString(),
+    updatedAt: req.updatedAt.toISOString(),
+  }));
+
+  return <AccountSettings user={serializedUser} friendRequests={serializedFriendRequests} />;
 }
