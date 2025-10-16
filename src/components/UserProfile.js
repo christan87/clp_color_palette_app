@@ -97,9 +97,17 @@ export default function UserProfile({ user, palettes, currentUserId, isFriend, i
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             {/* Avatar */}
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
-              {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
-            </div>
+            {user.image ? (
+              <img
+                src={user.image}
+                alt={user.name || user.email}
+                className="w-24 h-24 rounded-full object-cover flex-shrink-0"
+              />
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-3xl flex-shrink-0">
+                {user.name?.[0]?.toUpperCase() || user.email[0].toUpperCase()}
+              </div>
+            )}
 
             {/* User Info */}
             <div className="flex-1">

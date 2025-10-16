@@ -48,6 +48,11 @@ export default function Footer() {
             <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">Account</h3>
             <ul className="space-y-2">
               <li>
+                <Link href="/users/account" className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
+                  My Account
+                </Link>
+              </li>
+              <li>
                 <Link href="/auth/signin" className="text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors">
                   Sign In
                 </Link>

@@ -72,12 +72,6 @@ export async function PUT(request) {
     }
 
     if (action === "accept") {
-      // Update friend request status
-      await prisma.friendRequest.update({
-        where: { id: requestId },
-        data: { status: "ACCEPTED" },
-      });
-
       // Add each user to the other's friend list AND follower/following lists
       await prisma.user.update({
         where: { id: session.user.id },
@@ -109,15 +103,19 @@ export async function PUT(request) {
         },
       });
 
+      // Delete the friend request
+      await prisma.friendRequest.delete({
+        where: { id: requestId },
+      });
+
       return NextResponse.json({ 
         success: true, 
         message: "Friend request accepted" 
       });
     } else {
-      // Reject the request
-      await prisma.friendRequest.update({
+      // Delete the rejected request
+      await prisma.friendRequest.delete({
         where: { id: requestId },
-        data: { status: "REJECTED" },
       });
 
       return NextResponse.json({ 
