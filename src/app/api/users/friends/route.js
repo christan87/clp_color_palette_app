@@ -93,23 +93,25 @@ export async function DELETE(request) {
     // Get both users' data
     const currentUser = await prisma.user.findUnique({
       where: { id: session.user.id },
-      select: { friendIds: true },
+      select: { friendIds: true, followingIds: true, followerIds: true },
     });
 
     const targetUser = await prisma.user.findUnique({
       where: { id: friendId },
-      select: { friendIds: true },
+      select: { friendIds: true, followingIds: true, followerIds: true },
     });
 
     if (!targetUser) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Remove friend from both users' friend lists
+    // Remove friend from both users' friend lists AND follower/following lists
     await prisma.user.update({
       where: { id: session.user.id },
       data: {
         friendIds: currentUser.friendIds.filter(id => id !== friendId),
+        followingIds: currentUser.followingIds.filter(id => id !== friendId),
+        followerIds: currentUser.followerIds.filter(id => id !== friendId),
       },
     });
 
@@ -117,6 +119,8 @@ export async function DELETE(request) {
       where: { id: friendId },
       data: {
         friendIds: targetUser.friendIds.filter(id => id !== session.user.id),
+        followingIds: targetUser.followingIds.filter(id => id !== session.user.id),
+        followerIds: targetUser.followerIds.filter(id => id !== session.user.id),
       },
     });
 

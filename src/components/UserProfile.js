@@ -7,8 +7,10 @@ import Link from 'next/link';
 export default function UserProfile({ user, palettes, currentUserId, isFriend, isFollowing }) {
   const router = useRouter();
   const [addingFriend, setAddingFriend] = useState(false);
+  const [friend, setFriend] = useState(isFriend);
   const [following, setFollowing] = useState(isFollowing);
   const [followLoading, setFollowLoading] = useState(false);
+  const [removingFriend, setRemovingFriend] = useState(false);
 
   const handleAddFriend = async () => {
     setAddingFriend(true);
@@ -28,6 +30,31 @@ export default function UserProfile({ user, palettes, currentUserId, isFriend, i
       alert('Failed to add friend. Please try again.');
     } finally {
       setAddingFriend(false);
+    }
+  };
+
+  const handleRemoveFriend = async () => {
+    if (!confirm('Are you sure you want to unfriend this user? This will also unfollow each other.')) return;
+    
+    setRemovingFriend(true);
+    try {
+      const response = await fetch('/api/users/friends', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ friendId: user.id }),
+      });
+
+      if (!response.ok) throw new Error('Failed to remove friend');
+
+      setFriend(false);
+      setFollowing(false);
+      alert('Friend removed successfully!');
+      router.refresh();
+    } catch (error) {
+      console.error('Error removing friend:', error);
+      alert('Failed to remove friend. Please try again.');
+    } finally {
+      setRemovingFriend(false);
     }
   };
 
@@ -112,7 +139,7 @@ export default function UserProfile({ user, palettes, currentUserId, isFriend, i
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 w-full sm:w-auto">
-              {!isFriend && (
+              {!friend && (
                 <button
                   onClick={handleAddFriend}
                   disabled={addingFriend}
@@ -121,10 +148,14 @@ export default function UserProfile({ user, palettes, currentUserId, isFriend, i
                   {addingFriend ? 'Adding...' : '👥 Add Friend'}
                 </button>
               )}
-              {isFriend && (
-                <div className="px-6 py-3 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg font-semibold text-center">
-                  ✓ Friends
-                </div>
+              {friend && (
+                <button
+                  onClick={handleRemoveFriend}
+                  disabled={removingFriend}
+                  className="px-6 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all font-semibold shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {removingFriend ? 'Removing...' : '✗ Unfriend'}
+                </button>
               )}
               
               <button
@@ -136,7 +167,7 @@ export default function UserProfile({ user, palettes, currentUserId, isFriend, i
                     : 'bg-gradient-to-r from-orange-600 to-red-600 text-white hover:from-orange-700 hover:to-red-700'
                 }`}
               >
-                {followLoading ? 'Loading...' : following ? 'Following' : '+ Follow'}
+                {followLoading ? 'Loading...' : following ? '✓ Unfollow' : '+ Follow'}
               </button>
             </div>
           </div>
@@ -146,7 +177,7 @@ export default function UserProfile({ user, palettes, currentUserId, isFriend, i
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6">
           <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
             {user.name}'s Palettes
-            {isFriend && (
+            {friend && (
               <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
                 (Including friend palettes)
               </span>

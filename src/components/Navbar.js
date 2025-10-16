@@ -299,9 +299,12 @@ export default function Navbar() {
               </div>
             ) : session ? (
               <>
-                <div className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300">
+                <Link
+                  href="/users/account"
+                  className="hidden md:flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                >
                   <span className="font-medium">{session.user?.name || session.user?.email}</span>
-                </div>
+                </Link>
                 <button
                   onClick={handleSignOut}
                   className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all shadow-md hover:shadow-lg"

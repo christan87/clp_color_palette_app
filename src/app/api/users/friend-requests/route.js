@@ -78,11 +78,17 @@ export async function PUT(request) {
         data: { status: "ACCEPTED" },
       });
 
-      // Add each user to the other's friend list
+      // Add each user to the other's friend list AND follower/following lists
       await prisma.user.update({
         where: { id: session.user.id },
         data: {
           friendIds: {
+            push: friendRequest.senderId,
+          },
+          followingIds: {
+            push: friendRequest.senderId,
+          },
+          followerIds: {
             push: friendRequest.senderId,
           },
         },
@@ -92,6 +98,12 @@ export async function PUT(request) {
         where: { id: friendRequest.senderId },
         data: {
           friendIds: {
+            push: session.user.id,
+          },
+          followingIds: {
+            push: session.user.id,
+          },
+          followerIds: {
             push: session.user.id,
           },
         },
