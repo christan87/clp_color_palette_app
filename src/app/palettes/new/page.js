@@ -21,6 +21,8 @@ export default function NewPalettePage() {
   const [paletteAccess, setPaletteAccess] = useState('PRIVATE');
   const [saving, setSaving] = useState(false);
   const [editingExisting, setEditingExisting] = useState(false);
+  const [sortBy, setSortBy] = useState('hue'); // hue, name, company
+  const [viewMode, setViewMode] = useState('list'); // list or palette
 
   // Color details for the selected color
   const [colorDetails, setColorDetails] = useState({
@@ -188,6 +190,45 @@ export default function NewPalettePage() {
     });
   };
 
+  const sortColorsByName = (colors) => {
+    return [...colors].sort((a, b) => {
+      const nameA = (a.name || '').toLowerCase();
+      const nameB = (b.name || '').toLowerCase();
+      if (!nameA && !nameB) return 0;
+      if (!nameA) return 1;
+      if (!nameB) return -1;
+      return nameA.localeCompare(nameB);
+    });
+  };
+
+  const sortColorsByCompany = (colors) => {
+    return [...colors].sort((a, b) => {
+      const companyA = (a.company || '').toLowerCase();
+      const companyB = (b.company || '').toLowerCase();
+      if (!companyA && !companyB) return 0;
+      if (!companyA) return 1;
+      if (!companyB) return -1;
+      const companyCompare = companyA.localeCompare(companyB);
+      if (companyCompare !== 0) return companyCompare;
+      // If same company, sort by code
+      const codeA = (a.code || '').toLowerCase();
+      const codeB = (b.code || '').toLowerCase();
+      return codeA.localeCompare(codeB);
+    });
+  };
+
+  const getSortedPalette = () => {
+    switch (sortBy) {
+      case 'name':
+        return sortColorsByName(selectedPalette);
+      case 'company':
+        return sortColorsByCompany(selectedPalette);
+      case 'hue':
+      default:
+        return sortColorsByHue(selectedPalette);
+    }
+  };
+
   const randomizeColor = () => {
     const randomColor = colord({
       h: Math.random() * 360,
@@ -198,6 +239,8 @@ export default function NewPalettePage() {
   };
 
   const handleColorClick = (index) => {
+    const clickedColor = colorOptions[index];
+    setBaseColor(clickedColor.hex); // Update base color to clicked color
     setSelectedColorIndex(index);
     setColorDetails({
       name: '',
@@ -210,6 +253,7 @@ export default function NewPalettePage() {
 
   const handleExistingColorClick = (index) => {
     const color = selectedPalette[index];
+    setBaseColor(color.hex); // Update base color to clicked color
     setSelectedColorIndex(index);
     setColorDetails({
       name: color.name || '',
@@ -473,12 +517,60 @@ export default function NewPalettePage() {
 
         {/* Your Palette */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-6 mb-8">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-gray-200">
-            Your Palette
-            <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
-              ({selectedPalette.length} {selectedPalette.length === 1 ? 'color' : 'colors'})
-            </span>
-          </h2>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+              Your Palette
+              <span className="text-sm font-normal text-gray-500 dark:text-gray-400 ml-3">
+                ({selectedPalette.length} {selectedPalette.length === 1 ? 'color' : 'colors'})
+              </span>
+            </h2>
+            
+            {selectedPalette.length > 0 && (
+              <div className="flex gap-2">
+                {/* Sort Options */}
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="px-3 py-2 text-sm border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                >
+                  <option value="hue">Sort by Color</option>
+                  <option value="name">Sort by Name</option>
+                  <option value="company">Sort by Company</option>
+                </select>
+
+                {/* View Mode Toggle */}
+                <div className="flex border-2 border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => setViewMode('list')}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      viewMode === 'list'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                    title="List View"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setViewMode('palette')}
+                    className={`px-3 py-2 text-sm font-medium transition-colors ${
+                      viewMode === 'palette'
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-600'
+                    }`}
+                    title="Palette View"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zM14 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1h-4a1 1 0 01-1-1v-3z" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {selectedPalette.length === 0 ? (
             <div className="text-center py-12 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg">
               <svg 
@@ -493,48 +585,79 @@ export default function NewPalettePage() {
                 Click colors above to add them to your palette
               </p>
             </div>
-          ) : (
+          ) : viewMode === 'list' ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {selectedPalette.map((color, index) => (
-                <div
-                  key={index}
-                  className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
-                >
+              {getSortedPalette().map((color, index) => {
+                const originalIndex = selectedPalette.findIndex(c => c.hex === color.hex);
+                return (
                   <div
-                    className="h-32 cursor-pointer"
+                    key={index}
+                    className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
+                  >
+                    <div
+                      className="h-32 cursor-pointer"
+                      style={{ backgroundColor: color.hex }}
+                      onClick={() => handleExistingColorClick(originalIndex)}
+                    >
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleRemoveColor(originalIndex);
+                        }}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                        title="Remove color"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                    <div className="bg-gray-50 dark:bg-gray-700 p-3">
+                      <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
+                        {color.hex.toUpperCase()}
+                      </p>
+                      {color.name && (
+                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
+                          {color.name}
+                        </p>
+                      )}
+                      {color.company && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                          {color.company} {color.code}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="grid grid-cols-5 gap-0 rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-600">
+              {getSortedPalette().map((color, index) => {
+                const originalIndex = selectedPalette.findIndex(c => c.hex === color.hex);
+                return (
+                  <div
+                    key={index}
+                    className="group relative aspect-square cursor-pointer hover:ring-4 hover:ring-purple-500 hover:z-10 transition-all"
                     style={{ backgroundColor: color.hex }}
-                    onClick={() => handleExistingColorClick(index)}
+                    onClick={() => handleExistingColorClick(originalIndex)}
+                    title={`${color.hex.toUpperCase()}${color.name ? ` - ${color.name}` : ''}${color.company ? ` (${color.company} ${color.code})` : ''}`}
                   >
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleRemoveColor(index);
+                        handleRemoveColor(originalIndex);
                       }}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                      className="absolute top-1 right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20"
                       title="Remove color"
                     >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                       </svg>
                     </button>
                   </div>
-                  <div className="bg-gray-50 dark:bg-gray-700 p-3">
-                    <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
-                      {color.hex.toUpperCase()}
-                    </p>
-                    {color.name && (
-                      <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
-                        {color.name}
-                      </p>
-                    )}
-                    {color.company && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                        {color.company} {color.code}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 

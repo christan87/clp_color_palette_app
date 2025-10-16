@@ -109,6 +109,7 @@ export default function GeneratorPage() {
   };
 
   const handleColorClick = (color) => {
+    setBaseColor(color); // Update base color to clicked color
     setSelectedColor({
       hex: color,
       rgb: colord(color).toRgbString(),

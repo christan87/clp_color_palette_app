@@ -201,12 +201,8 @@ export async function DELETE(request, { params }) {
     // Get all color IDs from the palette before deletion
     const colorIds = palette.colorIds;
 
-    // Delete the palette
-    await prisma.palette.delete({
-      where: { id },
-    });
-
-    // Remove palette ID from all colors and delete orphaned colors
+    // STEP 1: Clean up colors first - remove palette ID from all associated colors
+    // and delete colors that have no other palettes
     await Promise.all(
       colorIds.map(async (colorId) => {
         const color = await prisma.color.findUnique({
@@ -233,6 +229,11 @@ export async function DELETE(request, { params }) {
         }
       })
     );
+
+    // STEP 2: After color cleanup, delete the palette
+    await prisma.palette.delete({
+      where: { id },
+    });
 
     return NextResponse.json({ message: 'Palette deleted successfully' });
   } catch (error) {
