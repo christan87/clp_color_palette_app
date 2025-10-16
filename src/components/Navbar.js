@@ -150,7 +150,7 @@ export default function Navbar() {
                       {searchResults.palettes.map((palette) => (
                         <Link
                           key={palette.id}
-                          href={`/palettes/${palette.id}`}
+                          href={`/palettes/user/${palette.id}`}
                           onClick={handleResultClick}
                           className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                         >
@@ -202,13 +202,11 @@ export default function Navbar() {
                         Colors
                       </p>
                       {searchResults.colors.map((color) => (
-                        <div
+                        <Link
                           key={color.id}
+                          href={`/color?color=${color.hex.replace('#', '')}`}
+                          onClick={handleResultClick}
                           className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer"
-                          onClick={() => {
-                            navigator.clipboard.writeText(color.hex);
-                            handleResultClick();
-                          }}
                         >
                           <div
                             className="w-10 h-10 rounded-lg shadow-md border border-gray-200 dark:border-gray-600"
@@ -228,9 +226,10 @@ export default function Navbar() {
                             )}
                           </div>
                           <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                        </div>
+                        </Link>
                       ))}
                     </div>
                   )}

@@ -650,13 +650,22 @@ export default function EditPalette({ palette }) {
                 </div>
               </div>
 
-              {/* Action Button */}
-              <button
-                onClick={editingExisting ? handleUpdateColor : handleAddColor}
-                className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-md hover:shadow-lg"
-              >
-                {editingExisting ? 'Update Color' : 'Add to Palette'}
-              </button>
+              {/* Action Buttons */}
+              <div className="space-y-3">
+                <button
+                  onClick={editingExisting ? handleUpdateColor : handleAddColor}
+                  className="w-full px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all font-semibold shadow-md hover:shadow-lg"
+                >
+                  {editingExisting ? 'Update Color' : 'Add to Palette'}
+                </button>
+                
+                <button
+                  onClick={() => router.push(`/color?color=${selectedColor.hex.replace('#', '')}`)}
+                  className="w-full px-6 py-3 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all font-semibold"
+                >
+                  View Color
+                </button>
+              </div>
             </div>
           </div>
         </>
