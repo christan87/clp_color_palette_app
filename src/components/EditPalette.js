@@ -565,50 +565,53 @@ export default function EditPalette({ palette }) {
               </p>
             </div>
           ) : viewMode === 'list' ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {getSortedPalette().map((color, index) => {
-                const originalIndex = selectedPalette.findIndex(c => c.hex === color.hex);
-                return (
-                  <div
-                    key={index}
-                    className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300"
-                  >
+            <div className="overflow-x-auto">
+              <div className="flex gap-4 pb-4" style={{ minWidth: 'min-content' }}>
+                {getSortedPalette().map((color, index) => {
+                  const originalIndex = selectedPalette.findIndex(c => c.hex === color.hex);
+                  return (
                     <div
-                      className="h-32 cursor-pointer"
-                      style={{ backgroundColor: color.hex }}
-                      onClick={() => handleExistingColorClick(originalIndex)}
+                      key={index}
+                      className="group relative rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 flex-shrink-0"
+                      style={{ width: '200px' }}
                     >
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveColor(originalIndex);
-                        }}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                        title="Remove color"
+                      <div
+                        className="h-32 cursor-pointer"
+                        style={{ backgroundColor: color.hex }}
+                        onClick={() => handleExistingColorClick(originalIndex)}
                       >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </div>
-                    <div className="bg-gray-50 dark:bg-gray-700 p-3">
-                      <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
-                        {color.hex.toUpperCase()}
-                      </p>
-                      {color.name && (
-                        <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
-                          {color.name}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveColor(originalIndex);
+                          }}
+                          className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                          title="Remove color"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                      <div className="bg-gray-50 dark:bg-gray-700 p-3">
+                        <p className="font-mono text-sm font-semibold text-gray-800 dark:text-gray-200">
+                          {color.hex.toUpperCase()}
                         </p>
-                      )}
-                      {color.company && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                          {color.company} {color.code}
-                        </p>
-                      )}
+                        {color.name && (
+                          <p className="text-xs text-gray-700 dark:text-gray-300 mt-1 font-semibold truncate">
+                            {color.name}
+                          </p>
+                        )}
+                        {color.company && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                            {color.company} {color.code}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-5 gap-0 rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-600">
